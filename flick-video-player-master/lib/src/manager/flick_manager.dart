@@ -1,20 +1,21 @@
 library flick_manager;
 
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
-part 'video_manager.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+
+part 'client_channels.dart';
 part 'control_manager.dart';
 part 'display_manager.dart';
-part 'client_channels.dart';
+part 'video_manager.dart';
 
 /// Manages [VideoPlayerController] and operations on it.
 class FlickManager {
   FlickManager({
     this.onVideoEnd,
     GetPlayerControlsTimeout getPlayerControlsTimeout,
-    @required VideoPlayerController videoPlayerController,
+    @required VlcPlayerController videoPlayerController,
 
     /// Auto initialize the video.
     bool autoInitialize = true,
@@ -63,7 +64,7 @@ class FlickManager {
   ///
   /// Current playing video will be paused and disposed,
   /// if [videoChangeDuration] is passed video change will happen after that duration.
-  handleChangeVideo(VideoPlayerController videoPlayerController,
+  handleChangeVideo(VlcPlayerController videoPlayerController,
       {Duration videoChangeDuration, TimerCancelCallback timerCancelCallback}) {
     _flickVideoManager._handleChangeVideo(videoPlayerController,
         videoChangeDuration: videoChangeDuration,
@@ -94,8 +95,12 @@ class FlickManager {
   ///
   /// This internally disposes all the supporting managers.
   dispose() {
-    _flickControlManager.dispose();
-    _flickDisplayManager.dispose();
-    _flickVideoManager.dispose();
+    try {
+      _flickControlManager.dispose();
+      _flickDisplayManager.dispose();
+      _flickVideoManager.dispose();
+    } catch (e) {
+      print(e);
+    }
   }
 }

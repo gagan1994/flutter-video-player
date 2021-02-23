@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flick_video_player/flick_video_player.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
 
 /// Default Video with Controls.
 ///
@@ -16,9 +16,7 @@ class FlickVideoWithControls extends StatefulWidget {
     Key key,
     this.controls,
     this.videoFit = BoxFit.cover,
-    this.playerLoadingFallback = const Center(
-      child: CircularProgressIndicator(),
-    ),
+    this.playerLoadingFallback = const Center(),
     this.playerErrorFallback = const Center(
       child: const Icon(
         Icons.error,
@@ -80,11 +78,11 @@ class FlickVideoWithControls extends StatefulWidget {
 }
 
 class _FlickVideoWithControlsState extends State<FlickVideoWithControls> {
-  VideoPlayerController _videoPlayerController;
+  VlcPlayerController _videoPlayerController;
 
   @override
   void didChangeDependencies() {
-    VideoPlayerController newController =
+    VlcPlayerController newController =
         Provider.of<FlickVideoManager>(context).videoPlayerController;
     if ((widget.willVideoPlayerControllerChange &&
             _videoPlayerController != newController) ||
@@ -117,7 +115,7 @@ class _FlickVideoWithControlsState extends State<FlickVideoWithControls> {
                   child: Stack(
                     children: <Widget>[
                       if (_videoPlayerController?.value?.hasError == false &&
-                          _videoPlayerController?.value?.initialized == false)
+                          _videoPlayerController?.value?.isInitialized == false)
                         widget.playerLoadingFallback,
                       if (_videoPlayerController?.value?.hasError == true)
                         widget.playerErrorFallback,

@@ -4,8 +4,8 @@ import 'package:flick_video_player/src/manager/flick_manager.dart';
 import 'package:flutter_app_video_player/config/Utils.dart';
 import 'package:flutter_app_video_player/db/moor_database.dart';
 import 'package:flutter_app_video_player/pages/shared_widgets/popup_items.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:screen/screen.dart';
-import 'package:video_player/video_player.dart';
 
 import 'providers_exports.dart';
 import 'src/aspect_exports.dart';
@@ -29,12 +29,16 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   VideoPlayerPool(this.appDatabase);
 
-  FileData get currentFile => playList[currentPlayingIndex];
+  FileData get currentFile =>
+      currentPlayingIndex == -1 ? null : playList[currentPlayingIndex];
 
   String get totalDuration => getTimeFromDuration(
       flickManager.flickVideoManager.videoPlayerController.value.duration);
 
   String get displayName => currentFile == null ? "" : currentFile.displayName;
+
+  bool get isInitilized =>
+      flickManager == null && playList != null && currentPlayingIndex != -1;
 
   Future<FileData> _getFile() {
     return appDatabase.filesDao.fetchFileWithPath(path);
@@ -62,9 +66,6 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   void setController(FlickManager flickManager) async {
     this.flickManager = flickManager;
-    var caption =
-        flickManager.flickVideoManager.videoPlayerController.dataSource;
-    print("Caption: ${caption}");
   }
 
   void fastRewind() {
@@ -72,12 +73,12 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
   }
 
   void fastForward() {
-    flickManager.flickControlManager.seekBackward(Duration(seconds: 10));
+    flickManager.flickControlManager.seekForward(Duration(seconds: 10));
   }
 
   void skipToPreviousVideo() {
     if (hasPreviousVideo()) {
-      flickManager.handleChangeVideo(VideoPlayerController.file(
+      flickManager.handleChangeVideo(VlcPlayerController.file(
           File(playList[currentPlayingIndex - 1].path)));
       currentPlayingIndex--;
       setController(flickManager);
@@ -86,7 +87,7 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   void skipToNextVideo() {
     if (hasNextVideo()) {
-      flickManager.handleChangeVideo(VideoPlayerController.file(
+      flickManager.handleChangeVideo(VlcPlayerController.file(
           File(playList[currentPlayingIndex + 1].path)));
       currentPlayingIndex++;
       setController(flickManager);
@@ -107,10 +108,13 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
     return false;
   }
 
-  void setSpeed(Speed thisSpeed) {
+  void setSpeed(Speed thisSpeed) async {
     currentSpeed = thisSpeed;
-    flickManager.flickVideoManager.videoPlayerController
+    await flickManager.flickVideoManager.videoPlayerController
         .setPlaybackSpeed(thisSpeed.val);
+    double palyBackSpeed = await flickManager
+        .flickVideoManager.videoPlayerController
+        .getPlaybackSpeed();
     markDirty();
     update();
   }
@@ -140,7 +144,7 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   void setVolume(double volume) {
     this.volume = volume;
-    flickManager.flickControlManager.setVolume(volume);
+    flickManager.flickControlManager.setVolume(volume.toInt());
     showVolume();
     notifyListeners();
   }

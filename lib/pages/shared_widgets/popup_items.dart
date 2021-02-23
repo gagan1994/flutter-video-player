@@ -82,7 +82,7 @@ class SpeedItems extends StatelessWidget {
         context.read<VideoPlayerPool>().setSpeed(thisSpeed);
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8),
+        padding: EdgeInsets.symmetric(horizontal: 10),
         child: Text(
           thisSpeed.name,
           style: TextStyle(

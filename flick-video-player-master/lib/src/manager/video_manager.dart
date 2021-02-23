@@ -19,8 +19,8 @@ class FlickVideoManager extends ChangeNotifier {
   TimerCancelCallback _timerCancelCallback;
   Duration _nextVideoAutoPlayDuration;
   Function _videoChangeCallback;
-  VideoPlayerValue _videoPlayerValue;
-  VideoPlayerController _videoPlayerController;
+  VlcPlayerValue _videoPlayerValue;
+  VlcPlayerController _videoPlayerController;
   bool _mounted = true;
 
   /// Auto-play the video after initialization.
@@ -48,17 +48,17 @@ class FlickVideoManager extends ChangeNotifier {
   Duration get nextVideoAutoPlayDuration => _nextVideoAutoPlayDuration;
 
   /// [videoPlayerController.value]
-  VideoPlayerValue get videoPlayerValue => _videoPlayerValue;
+  VlcPlayerValue get videoPlayerValue => _videoPlayerValue;
 
   /// Current playing video controller.
-  VideoPlayerController get videoPlayerController => _videoPlayerController;
+  VlcPlayerController get videoPlayerController => _videoPlayerController;
 
   /// Error in initializing video.
   bool get errorInVideo => videoPlayerController?.value?.hasError ?? false;
 
   /// Is current video initialized.
   bool get isVideoInitialized =>
-      videoPlayerController?.value?.initialized ?? false;
+      videoPlayerController?.value?.isInitialized ?? false;
   bool get isPlaying => videoPlayerController?.value?.isPlaying ?? false;
 
   /// Cancel the current auto player timer with option of playing the next video directly.
@@ -81,7 +81,7 @@ class FlickVideoManager extends ChangeNotifier {
     _notify();
   }
 
-  _handleChangeVideo(VideoPlayerController newController,
+  _handleChangeVideo(VlcPlayerController newController,
       {Duration videoChangeDuration,
       TimerCancelCallback timerCancelCallback}) async {
     // If videoChangeDuration is not null, start the autoPlayTimer.
@@ -106,10 +106,10 @@ class FlickVideoManager extends ChangeNotifier {
   }
 
   // Immediately change the video.
-  _changeVideo(VideoPlayerController newController) async {
+  _changeVideo(VlcPlayerController newController) async {
     //  Change the videoPlayerController with the new controller,
     // notify the controller change and remove listeners from the old controller.
-    VideoPlayerController oldController = videoPlayerController;
+    VlcPlayerController oldController = videoPlayerController;
     _flickManager.flickControlManager.pause();
     _videoPlayerController = newController;
     oldController?.removeListener(_videoListener);
@@ -123,22 +123,20 @@ class FlickVideoManager extends ChangeNotifier {
     // Dispose the old controller after 5 seconds.
     Future.delayed(Duration(seconds: 5), () => oldController?.dispose());
 
+    // Initialize the video if not initialized
+    // (User can initialize the video while passing to flick).
+    if (!videoPlayerController.value.isInitialized) {
+      _notify();
+      return;
+    }
+
     // If movie already ended, restart the movie (Happens when previously used controller is
     // used again).
+
     if (videoPlayerController.value.position ==
         videoPlayerController.value.duration) {
       videoPlayerController
           .seekTo(Duration(hours: 0, minutes: 0, seconds: 0, milliseconds: 0));
-    }
-
-    // Initialize the video if not initialized
-    // (User can initialize the video while passing to flick).
-    if (!videoPlayerController.value.initialized && autoInitialize) {
-      try {
-        await videoPlayerController.initialize();
-      } catch (err) {
-        _flickManager._handleErrorInVideo();
-      }
     }
 
     if (autoPlay && ModalRoute.of(_flickManager._context).isCurrent) {
@@ -174,12 +172,7 @@ class FlickVideoManager extends ChangeNotifier {
 
     // Mark video is buffering if video has not ended, has no error,
     // and position is equal to buffered duration.
-    _isBuffering = !isVideoEnded &&
-        !videoPlayerValue.hasError &&
-        videoPlayerController.value?.buffered?.isNotEmpty == true &&
-        videoPlayerController.value.position.inSeconds >=
-            videoPlayerController.value?.buffered[0]?.end?.inSeconds;
-
+    _isBuffering = videoPlayerController.value?.isBuffering;
     _notify();
   }
 
@@ -197,12 +190,10 @@ class FlickVideoManager extends ChangeNotifier {
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     _mounted = false;
-    _videoPlayerController?.pause();
-    _videoPlayerController?.removeListener(_videoListener);
-    _videoPlayerController?.dispose();
-
+    await _videoPlayerController?.removeListener(_videoListener);
+    await _videoPlayerController?.dispose();
     super.dispose();
   }
 }

@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  video_player: ^1.0.1
+  flutter_vlc_player: ^5.0.4
   provider: ^4.0.5
   wakelock: ^0.1.4+1
 

@@ -13,11 +13,9 @@ class LandscapeVideoController extends StatelessWidget {
         FlickShowControlsAction(
           child: FlickSeekVideoAction(
             child: Center(
-              child: FlickVideoBuffer(
-                child: FlickAutoHideChild(
-                  showIfVideoNotInitialized: false,
-                  child: LandscapePlayToggle(), //Center widget
-                ),
+              child: FlickAutoHideChild(
+                showIfVideoNotInitialized: false,
+                child: LandscapePlayToggle(), //Center widget
               ),
             ),
           ),

@@ -1,8 +1,8 @@
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
 
 /// Renders progress bar for the video using custom paint.
 class FlickVideoProgressBar extends StatelessWidget {
@@ -25,7 +25,7 @@ class FlickVideoProgressBar extends StatelessWidget {
     FlickControlManager controlManager =
         Provider.of<FlickControlManager>(context);
     FlickVideoManager videoManager = Provider.of<FlickVideoManager>(context);
-    VideoPlayerValue videoPlayerValue = videoManager.videoPlayerValue;
+    VlcPlayerValue videoPlayerValue = videoManager.videoPlayerValue;
 
     if (videoPlayerValue == null) return Container();
 
@@ -54,7 +54,7 @@ class FlickVideoProgressBar extends StatelessWidget {
           ),
         ),
         onHorizontalDragStart: (DragStartDetails details) {
-          if (!videoPlayerValue.initialized) {
+          if (!videoPlayerValue.isInitialized) {
             return;
           }
           // _controllerWasPlaying = flickControlManager.isPlaying;
@@ -67,7 +67,7 @@ class FlickVideoProgressBar extends StatelessWidget {
           }
         },
         onHorizontalDragUpdate: (DragUpdateDetails details) {
-          if (!videoPlayerValue.initialized) {
+          if (!videoPlayerValue.isInitialized) {
             return;
           }
           seekToRelativePosition(details.globalPosition);
@@ -84,7 +84,7 @@ class FlickVideoProgressBar extends StatelessWidget {
           }
         },
         onTapDown: (TapDownDetails details) {
-          if (!videoPlayerValue.initialized) {
+          if (!videoPlayerValue.isInitialized) {
             return;
           }
           seekToRelativePosition(details.globalPosition);
@@ -97,7 +97,7 @@ class FlickVideoProgressBar extends StatelessWidget {
 class _ProgressBarPainter extends CustomPainter {
   _ProgressBarPainter(this.value, {this.flickProgressBarSettings});
 
-  VideoPlayerValue value;
+  VlcPlayerValue value;
   FlickProgressBarSettings flickProgressBarSettings;
 
   @override
@@ -130,7 +130,7 @@ class _ProgressBarPainter extends CustomPainter {
       ),
       backgroundPaint,
     );
-    if (value?.initialized == false) {
+    if (value?.isInitialized == false) {
       return;
     }
 
@@ -138,33 +138,6 @@ class _ProgressBarPainter extends CustomPainter {
         value.position.inMilliseconds / value.duration.inMilliseconds;
     final double playedPart =
         playedPartPercent > 1 ? width : playedPartPercent * width;
-
-    for (DurationRange range in value.buffered) {
-      final double start = range.startFraction(value.duration) * width;
-      final double end = range.endFraction(value.duration) * width;
-
-      Paint bufferedPaint = flickProgressBarSettings.getBufferedPaint != null
-          ? flickProgressBarSettings.getBufferedPaint(
-              width: width,
-              height: height,
-              playedPart: playedPart,
-              handleRadius: handleRadius,
-              bufferedStart: start,
-              bufferedEnd: end)
-          : Paint()
-        ..color = flickProgressBarSettings.bufferedColor;
-
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromPoints(
-            Offset(start, 0),
-            Offset(end, height),
-          ),
-          Radius.circular(curveRadius),
-        ),
-        bufferedPaint,
-      );
-    }
 
     Paint playedPaint = flickProgressBarSettings.getPlayedPaint != null
         ? flickProgressBarSettings.getPlayedPaint(
@@ -179,9 +152,9 @@ class _ProgressBarPainter extends CustomPainter {
       RRect.fromRectAndRadius(
         Rect.fromPoints(
           Offset(0.0, 0.0),
-          Offset(playedPart, height),
+          Offset(playedPart.isNaN ? 0 : playedPart, height),
         ),
-        Radius.circular(curveRadius),
+        Radius.circular(curveRadius.isNaN ? 0 : curveRadius),
       ),
       playedPaint,
     );
@@ -197,7 +170,7 @@ class _ProgressBarPainter extends CustomPainter {
       ..color = flickProgressBarSettings.handleColor;
 
     canvas.drawCircle(
-      Offset(playedPart, height / 2),
+      Offset(playedPart.isNaN ? 0 : playedPart, height / 2),
       handleRadius,
       handlePaint,
     );

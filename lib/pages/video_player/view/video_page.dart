@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_video_player/pages/video_player/widgets/anim_slider_widget.dart';
 import 'package:flutter_app_video_player/shared_state/video_player_pool.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
 
 import '../widgets/landscape_video_controller.dart';
 
@@ -41,80 +41,7 @@ class _LandscapePlayerState extends State<LandscapePlayer> {
     return Scaffold(
       body: Consumer<VideoPlayerPool>(
         builder: (context, model, child) {
-          if (model.flickManager == null || model.playList == null) {
-            return Container();
-          }
-          flickManager = model.flickManager;
-          return Stack(
-            children: [
-              GestureDetector(
-                onHorizontalDragUpdate: (details) {
-                  // Note: Sensitivity is integer used when you don't want to mess up vertical drag
-                  if (details.delta.dx > sensitivity) {
-                    model.swipeRight(details.delta.dx);
-                  } else if (details.delta.dx < -sensitivity) {
-                    model.swipeLeft(details.delta.dx);
-                  }
-                },
-                child: FlickVideoPlayer(
-                  flickManager: flickManager,
-                  preferredDeviceOrientation: [
-                    DeviceOrientation.landscapeRight,
-                    DeviceOrientation.landscapeLeft
-                  ],
-                  systemUIOverlay: [],
-                  flickVideoWithControls: FlickVideoWithControls(
-                    controls: LandscapeVideoController(),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                bottom: 100,
-                top: 100,
-                child: GestureDetector(
-                  onTap: () {
-                    model.showBrightness();
-                  },
-                  child: Container(
-                    width: 250,
-                    height: 100,
-                    child: AnimSliderWidget(
-                      model.isBrightnessVissible,
-                      model.brightness,
-                      min: 0,
-                      max: 10,
-                      activeColor: Colors.orangeAccent,
-                      onValueChanged: (double b) {
-                        context.read<VideoPlayerPool>().setBrightness(b);
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 100,
-                top: 100,
-                child: GestureDetector(
-                  onTap: () {
-                    model.showVolume();
-                  },
-                  child: Container(
-                    width: 250,
-                    height: 100,
-                    child: AnimSliderWidget(
-                      model.isVolumeVissible,
-                      model.volume,
-                      onValueChanged: (double b) {
-                        context.read<VideoPlayerPool>().setVolume(b);
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
+          return _getBody(model);
         },
       ),
     );
@@ -128,9 +55,97 @@ class _LandscapePlayerState extends State<LandscapePlayer> {
     }
   }
 
-  void initContoller() {
+  void initContoller() async {
+    VlcPlayerController controller = VlcPlayerController.file(
+      File(path),
+      hwAcc: HwAcc.FULL,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
     flickManager = FlickManager(
-        videoPlayerController: VideoPlayerController.file(File(path)));
+        videoPlayerController: controller,
+        autoInitialize: true,
+        autoPlay: true);
     context.read<VideoPlayerPool>().setController(flickManager);
+    setState(() {});
+  }
+
+  Widget _getBody(VideoPlayerPool model) {
+    if (model.isInitilized) {
+      return Container();
+    }
+    flickManager = context.read<VideoPlayerPool>().flickManager;
+    return Stack(
+      children: [
+        GestureDetector(
+          onHorizontalDragUpdate: (details) {
+            // Note: Sensitivity is integer used when you don't want to mess up vertical drag
+            if (details.delta.dx > sensitivity) {
+              context.read<VideoPlayerPool>().swipeRight(details.delta.dx);
+            } else if (details.delta.dx < -sensitivity) {
+              context.read<VideoPlayerPool>().swipeLeft(details.delta.dx);
+            }
+          },
+          child: FlickVideoPlayer(
+            flickManager: flickManager,
+            preferredDeviceOrientation: [
+              DeviceOrientation.landscapeRight,
+              DeviceOrientation.landscapeLeft,
+            ],
+            systemUIOverlay: [],
+            flickVideoWithControls: FlickVideoWithControls(
+              controls: LandscapeVideoController(),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          bottom: 100,
+          top: 100,
+          child: GestureDetector(
+            onTap: () {
+              context.read<VideoPlayerPool>().showBrightness();
+            },
+            child: Container(
+              width: 250,
+              height: 100,
+              child: AnimSliderWidget(
+                context.read<VideoPlayerPool>().isBrightnessVissible,
+                context.read<VideoPlayerPool>().brightness,
+                min: 0,
+                max: 10,
+                activeColor: Colors.orangeAccent,
+                onValueChanged: (double b) {
+                  context.read<VideoPlayerPool>().setBrightness(b);
+                },
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          right: 0,
+          bottom: 100,
+          top: 100,
+          child: GestureDetector(
+            onTap: () {
+              context.read<VideoPlayerPool>().showVolume();
+            },
+            child: Container(
+              width: 250,
+              height: 100,
+              child: AnimSliderWidget(
+                context.read<VideoPlayerPool>().isVolumeVissible,
+                context.read<VideoPlayerPool>().volume,
+                min: 0,
+                max: 100,
+                onValueChanged: (double b) {
+                  context.read<VideoPlayerPool>().setVolume(b);
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

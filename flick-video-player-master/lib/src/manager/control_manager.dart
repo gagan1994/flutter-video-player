@@ -22,7 +22,7 @@ class FlickControlManager extends ChangeNotifier {
   /// Is player mute.
   bool get isMute => _isMute;
 
-  VideoPlayerController get _videoPlayerController =>
+  VlcPlayerController get _videoPlayerController =>
       _flickManager.flickVideoManager.videoPlayerController;
   bool get _isPlaying => _flickManager.flickVideoManager.isPlaying;
 
@@ -136,10 +136,10 @@ class FlickControlManager extends ChangeNotifier {
     _isMute ? unmute() : mute();
   }
 
-  /// Set volume between 0.0 - 1.0,
-  /// 0.0 being mute and 1.0 full volume.
-  Future<void> setVolume(double volume) async {
-    await _videoPlayerController?.setVolume(volume);
+  /// Set volume between 0.0 - 100,
+  /// 0.0 being mute and 100 full volume.
+  Future<void> setVolume(int volume) async {
+    await _videoPlayerController?.setVolume(volume.toInt());
     _notify();
   }
 

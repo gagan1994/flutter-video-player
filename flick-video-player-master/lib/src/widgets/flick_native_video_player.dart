@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 
 /// Renders [VideoPlayer] with [BoxFit] configurations.
 class FlickNativeVideoPlayer extends StatelessWidget {
@@ -12,36 +12,22 @@ class FlickNativeVideoPlayer extends StatelessWidget {
 
   final BoxFit fit;
   final double aspectRatioWhenLoading;
-  final VideoPlayerController videoPlayerController;
+  final VlcPlayerController videoPlayerController;
 
   @override
   Widget build(BuildContext context) {
-    VideoPlayer videoPlayer = VideoPlayer(videoPlayerController);
-
-    double videoHeight = videoPlayerController?.value?.size?.height;
-    double videoWidth = videoPlayerController?.value?.size?.width;
-
     return LayoutBuilder(
       builder: (context, size) {
         double aspectRatio = (size.maxHeight == double.infinity ||
                 size.maxWidth == double.infinity)
-            ? videoPlayerController?.value?.initialized == true
-                ? videoPlayerController?.value?.aspectRatio
-                : aspectRatioWhenLoading
+            ? videoPlayerController?.value?.aspectRatio
             : size.maxWidth / size.maxHeight;
-
-        return AspectRatio(
+        VlcPlayer videoPlayer = VlcPlayer(
+          controller: videoPlayerController,
           aspectRatio: aspectRatio,
-          child: FittedBox(
-            fit: fit,
-            child: videoPlayerController?.value?.initialized == true
-                ? Container(
-                    height: videoHeight,
-                    width: videoWidth,
-                    child: videoPlayer,
-                  )
-                : Container(),
-          ),
+        );
+        return Container(
+          child: videoPlayer,
         );
       },
     );
