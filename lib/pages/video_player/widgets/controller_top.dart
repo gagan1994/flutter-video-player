@@ -1,10 +1,13 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_video_player/pages/shared_widgets/popup_items.dart';
+import 'package:flutter_app_video_player/pages/mixins/popup_alerts.dart';
+import 'package:flutter_app_video_player/pages/video_player/widgets/video_popup_menu.dart';
 import 'package:flutter_app_video_player/shared_state/providers_exports.dart';
 import 'package:provider/provider.dart';
 
-class ControllerTop extends StatelessWidget {
+import 'audio_content.dart';
+
+class ControllerTop extends StatelessWidget with AudioAlert {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -25,34 +28,23 @@ class ControllerTop extends StatelessWidget {
               style: TextStyle(color: Colors.white),
             ),
           ),
-          myPopMenu()
+          Consumer<VideoPlayerPool>(builder: (context, model, child) {
+            return model.getActiveAudioTrack() == null ||
+                    model.getActiveAudioTrack() == AudioContent.DISABLE_AUDIO
+                ? GestureDetector(
+                    onTap: () {
+                      openAudio(context, model);
+                    },
+                    child: Icon(
+                      Icons.music_off_rounded,
+                      color: Colors.white,
+                    ),
+                  )
+                : Container();
+          }),
+          VideoPopUpMenuButton()
         ],
       ),
     );
-  }
-
-  Widget myPopMenu() {
-    return PopupMenuButton(
-        color: Colors.black87,
-        onSelected: (value) {
-          print("Selected value is: $value");
-        },
-        itemBuilder: (context) => [
-              PopupMenuItem(value: 2, child: PopUpSpeedItem()),
-              PopupMenuItem(
-                  value: 3,
-                  child: Row(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(2, 2, 8, 2),
-                        child: Icon(Icons.add_circle),
-                      ),
-                      Text(
-                        'Add',
-                        style: TextStyle(color: Colors.white),
-                      )
-                    ],
-                  )),
-            ]);
   }
 }

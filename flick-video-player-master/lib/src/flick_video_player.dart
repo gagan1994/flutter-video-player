@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:wakelock/wakelock.dart';
 
 class FlickVideoPlayer extends StatefulWidget {
-  const FlickVideoPlayer({
+  FlickVideoPlayer({
     Key key,
     @required this.flickManager,
     this.flickVideoWithControls = const FlickVideoWithControls(

@@ -51,19 +51,29 @@ class PopUpSpeedItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<VideoPlayerPool>(
       builder: (context, model, child) {
-        return Row(
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            Container(
+              padding: EdgeInsets.all(10),
               child: Text(
                 'Speed',
                 style: TextStyle(color: Colors.white),
               ),
             ),
-            SpeedItems(model.currentSpeed, Speed.SPEED_025),
-            SpeedItems(model.currentSpeed, Speed.SPEED_050),
-            SpeedItems(model.currentSpeed, Speed.SPEED_1),
-            SpeedItems(model.currentSpeed, Speed.SPEED_2),
-            SpeedItems(model.currentSpeed, Speed.SPEED_3),
+            SizedBox(
+              height: 10,
+            ),
+            Row(
+              children: [
+                SpeedItems(model.currentSpeed, Speed.SPEED_025),
+                SpeedItems(model.currentSpeed, Speed.SPEED_050),
+                SpeedItems(model.currentSpeed, Speed.SPEED_1),
+                SpeedItems(model.currentSpeed, Speed.SPEED_2),
+                SpeedItems(model.currentSpeed, Speed.SPEED_3),
+              ],
+            )
           ],
         );
       },
@@ -82,7 +92,7 @@ class SpeedItems extends StatelessWidget {
         context.read<VideoPlayerPool>().setSpeed(thisSpeed);
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10),
+        padding: EdgeInsets.all(10),
         child: Text(
           thisSpeed.name,
           style: TextStyle(

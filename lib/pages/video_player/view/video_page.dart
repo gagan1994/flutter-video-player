@@ -10,13 +10,18 @@ import 'package:provider/provider.dart';
 
 import '../widgets/landscape_video_controller.dart';
 
+abstract class VideoPlayerHelper {
+  void updateVideoPath(String path);
+}
+
 class LandscapePlayer extends StatefulWidget {
   static const String ROUTE = "/video_player";
   @override
   _LandscapePlayerState createState() => _LandscapePlayerState();
 }
 
-class _LandscapePlayerState extends State<LandscapePlayer> {
+class _LandscapePlayerState extends State<LandscapePlayer>
+    with VideoPlayerHelper {
   String path;
   FlickManager flickManager;
 
@@ -39,18 +44,14 @@ class _LandscapePlayerState extends State<LandscapePlayer> {
   Widget build(BuildContext context) {
     updatePath(context);
     return Scaffold(
-      body: Consumer<VideoPlayerPool>(
-        builder: (context, model, child) {
-          return _getBody(model);
-        },
-      ),
+      body: _getBody(context.read<VideoPlayerPool>()),
     );
   }
 
   void updatePath(BuildContext context) {
     if (path == null) {
       path = ModalRoute.of(context).settings.arguments;
-      context.read<VideoPlayerPool>().setFilePath(path);
+      context.read<VideoPlayerPool>().setFilePath(path, this);
       initContoller();
     }
   }
@@ -147,5 +148,11 @@ class _LandscapePlayerState extends State<LandscapePlayer> {
         ),
       ],
     );
+  }
+
+  @override
+  void updateVideoPath(String path) {
+    this.path = path;
+    initContoller();
   }
 }

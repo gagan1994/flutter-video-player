@@ -1,17 +1,17 @@
-import 'dart:io';
-
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flick_video_player/src/manager/flick_manager.dart';
 import 'package:flutter_app_video_player/config/Utils.dart';
 import 'package:flutter_app_video_player/db/moor_database.dart';
+import 'package:flutter_app_video_player/pages/mixins/popup_alerts.dart';
 import 'package:flutter_app_video_player/pages/shared_widgets/popup_items.dart';
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:flutter_app_video_player/pages/video_player/video_player_exports.dart';
 import 'package:screen/screen.dart';
 
 import 'providers_exports.dart';
 import 'src/aspect_exports.dart';
 
 class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
-    with ChildAspect {
+    with ChildAspect, SubtitleHelper, AudioTrackHelper {
   AppDatabase appDatabase;
   String path;
   Speed currentSpeed = Speed.SPEED_1;
@@ -26,6 +26,8 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   double brightness = 0.1;
   double volume = 0;
+
+  VideoPlayerHelper helper;
 
   VideoPlayerPool(this.appDatabase);
 
@@ -44,8 +46,9 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
     return appDatabase.filesDao.fetchFileWithPath(path);
   }
 
-  void setFilePath(String path) async {
+  void setFilePath(String path, VideoPlayerHelper helper) async {
     flickManager = null;
+    this.helper = helper;
     this.path = path;
     FileData fileData = await _getFile();
     playList =
@@ -56,7 +59,6 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
       return;
     }
     currentPlayingIndex = playList.indexOf(currentObject);
-
     brightness = await Screen.brightness;
   }
 
@@ -78,19 +80,15 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   void skipToPreviousVideo() {
     if (hasPreviousVideo()) {
-      flickManager.handleChangeVideo(VlcPlayerController.file(
-          File(playList[currentPlayingIndex - 1].path)));
+      helper.updateVideoPath(playList[currentPlayingIndex - 1].path);
       currentPlayingIndex--;
-      setController(flickManager);
     }
   }
 
   void skipToNextVideo() {
     if (hasNextVideo()) {
-      flickManager.handleChangeVideo(VlcPlayerController.file(
-          File(playList[currentPlayingIndex + 1].path)));
+      helper.updateVideoPath(playList[currentPlayingIndex + 1].path);
       currentPlayingIndex++;
-      setController(flickManager);
     }
   }
 
@@ -112,9 +110,6 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
     currentSpeed = thisSpeed;
     await flickManager.flickVideoManager.videoPlayerController
         .setPlaybackSpeed(thisSpeed.val);
-    double palyBackSpeed = await flickManager
-        .flickVideoManager.videoPlayerController
-        .getPlaybackSpeed();
     markDirty();
     update();
   }
@@ -156,5 +151,36 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
   void swipeLeft(double dx) {
     flickManager.flickControlManager
         .seekBackward(Duration(seconds: dx.toInt()));
+  }
+
+  Future<Map<int, String>> getSpuTracks() {
+    return flickManager.flickVideoManager.videoPlayerController.getSpuTracks();
+  }
+
+  Future<Map<int, String>> getAudioTracks() {
+    return flickManager.flickVideoManager.videoPlayerController
+        .getAudioTracks();
+  }
+
+  int getActiveAudioTrack() {
+    return flickManager
+        .flickVideoManager.videoPlayerController.value.activeAudioTrack;
+  }
+
+  @override
+  void setAudioTrack(int audioTrackNumber) async {
+    await flickManager.flickVideoManager.videoPlayerController
+        .setAudioTrack(audioTrackNumber);
+    notifyListeners();
+  }
+
+  @override
+  void setSubtitleTrack(int subtitleSelectedId) async {
+    int currentSubtitle = await flickManager
+        .flickVideoManager.videoPlayerController
+        .getSpuTrack();
+    if (subtitleSelectedId == currentSubtitle) subtitleSelectedId = -1;
+    flickManager.flickVideoManager.videoPlayerController
+        .setSpuTrack(subtitleSelectedId);
   }
 }

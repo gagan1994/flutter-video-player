@@ -126,7 +126,7 @@ class FlickVideoManager extends ChangeNotifier {
     // Initialize the video if not initialized
     // (User can initialize the video while passing to flick).
     if (!videoPlayerController.value.isInitialized) {
-      _notify();
+      notifyListeners();
       return;
     }
 

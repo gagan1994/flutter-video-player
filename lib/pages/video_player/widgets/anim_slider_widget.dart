@@ -15,7 +15,6 @@ class AnimSliderWidget extends StatelessWidget {
       this.max: 1});
   @override
   Widget build(BuildContext context) {
-    print("Brightness val: $value");
     return AnimatedOpacity(
       opacity: isVissible ? 1.0 : 0.0,
       duration: Duration(milliseconds: 500),

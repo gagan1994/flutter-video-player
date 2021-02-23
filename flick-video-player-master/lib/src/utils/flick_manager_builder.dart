@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 /// Uses [MultiProviders] to add all the managers as providers.
 class FlickManagerBuilder extends StatelessWidget {
-  const FlickManagerBuilder({Key key, this.child, this.flickManager})
+  FlickManagerBuilder({Key key, this.child, this.flickManager})
       : super(key: key);
   final Widget child;
   final FlickManager flickManager;
