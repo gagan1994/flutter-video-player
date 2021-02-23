@@ -38,9 +38,8 @@ dependencies:
 #  video_player: ^1.0.1
 #  chewie: ^0.12.2
   screen: ^0.0.5
+  video_thumbnail: ^0.2.5+1
 
-  video_thumbnail:
-    path: ../video_thumbnail
   flick_video_player:
     path: flick-video-player-master
 
