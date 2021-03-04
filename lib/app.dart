@@ -19,7 +19,6 @@ class App extends StatelessWidget {
         ChangeNotifierProvider.value(value: player),
         ChangeNotifierProvider.value(value: player.folder),
         ChangeNotifierProvider.value(value: player.videos),
-        ChangeNotifierProvider.value(value: player.videoPlayer),
       ],
       child: MaterialApp(
         theme: ThemeData(

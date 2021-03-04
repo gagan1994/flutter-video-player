@@ -42,7 +42,10 @@ class ControllerTop extends StatelessWidget with AudioAlert {
                   )
                 : Container();
           }),
-          VideoPopUpMenuButton()
+          ChangeNotifierProvider(
+            create: (_) => context.read<VideoPlayerPool>().menuController,
+            child: VideoPopUpMenuButton(),
+          )
         ],
       ),
     );

@@ -9,11 +9,9 @@ class Player extends AspectContainer {
   FolderPool _folder;
   VideoPool _videos;
   AppDatabase appDatabase;
-  VideoPlayerPool _videoPlayer;
   double thumbConversionProgress;
   Player(this.appDatabase)
       : _folder = FolderPool(appDatabase),
-        _videoPlayer = VideoPlayerPool(appDatabase),
         _videos = VideoPool(appDatabase) {
     addAspect(_folder);
     addAspect(_videos);
@@ -22,8 +20,6 @@ class Player extends AspectContainer {
   FolderPool get folder => _folder;
 
   VideoPool get videos => _videos;
-
-  VideoPlayerPool get videoPlayer => _videoPlayer;
 
   void initVideoPaths(String videoPath) async {
     Timeline.startSync("Generate_Thumb");

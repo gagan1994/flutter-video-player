@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app_video_player/shared_state/providers_exports.dart';
+import 'package:flutter_app_video_player/shared_state/videocontroller/menu_controller_pool.dart';
 import 'package:provider/provider.dart';
 
 enum Speed {
@@ -49,7 +50,7 @@ extension SpeedExtension on Speed {
 class PopUpSpeedItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Consumer<VideoPlayerPool>(
+    return Consumer<MenuControllerPool>(
       builder: (context, model, child) {
         return Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,

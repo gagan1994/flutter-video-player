@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flick_video_player/src/manager/flick_manager.dart';
 import 'package:flutter_app_video_player/config/Utils.dart';
 import 'package:flutter_app_video_player/db/moor_database.dart';
 import 'package:flutter_app_video_player/pages/mixins/popup_alerts.dart';
 import 'package:flutter_app_video_player/pages/shared_widgets/popup_items.dart';
-import 'package:flutter_app_video_player/pages/video_player/video_player_exports.dart';
+import 'package:flutter_app_video_player/shared_state/videocontroller/menu_controller_pool.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:screen/screen.dart';
 
 import 'providers_exports.dart';
@@ -27,9 +30,12 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
   double brightness = 0.1;
   double volume = 0;
 
-  VideoPlayerHelper helper;
+  MenuControllerPool _menuControllerPool;
 
-  VideoPlayerPool(this.appDatabase);
+  VideoPlayerPool(this.appDatabase, this.path) {
+    initContoller();
+    _menuControllerPool = MenuControllerPool(this);
+  }
 
   FileData get currentFile =>
       currentPlayingIndex == -1 ? null : playList[currentPlayingIndex];
@@ -40,15 +46,34 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
   String get displayName => currentFile == null ? "" : currentFile.displayName;
 
   bool get isInitilized =>
-      flickManager == null && playList != null && currentPlayingIndex != -1;
+      flickManager != null && playList != null && currentPlayingIndex != -1;
+
+  MenuControllerPool get menuController => _menuControllerPool;
 
   Future<FileData> _getFile() {
     return appDatabase.filesDao.fetchFileWithPath(path);
   }
 
-  void setFilePath(String path, VideoPlayerHelper helper) async {
+  void initContoller() async {
+    await setFilePath(path);
+    VlcPlayerController controller = VlcPlayerController.file(
+      File(path),
+      hwAcc: HwAcc.FULL,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
+    print("controller");
+    flickManager = FlickManager(
+        videoPlayerController: controller,
+        autoInitialize: true,
+        autoPlay: true);
+    setController(flickManager);
+    print("controller");
+    notifyListeners();
+  }
+
+  void setFilePath(String path) async {
     flickManager = null;
-    this.helper = helper;
     this.path = path;
     FileData fileData = await _getFile();
     playList =
@@ -80,15 +105,19 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   void skipToPreviousVideo() {
     if (hasPreviousVideo()) {
-      helper.updateVideoPath(playList[currentPlayingIndex - 1].path);
+      path = playList[currentPlayingIndex - 1].path;
+      initContoller();
       currentPlayingIndex--;
+      notifyListeners();
     }
   }
 
   void skipToNextVideo() {
     if (hasNextVideo()) {
-      helper.updateVideoPath(playList[currentPlayingIndex + 1].path);
+      path = playList[currentPlayingIndex + 1].path;
+      initContoller();
       currentPlayingIndex++;
+      notifyListeners();
     }
   }
 
@@ -169,18 +198,12 @@ class VideoPlayerPool extends AspectContainer<VideoPlayerModel>
 
   @override
   void setAudioTrack(int audioTrackNumber) async {
-    await flickManager.flickVideoManager.videoPlayerController
-        .setAudioTrack(audioTrackNumber);
+    menuController.setAudioTrack(audioTrackNumber);
     notifyListeners();
   }
 
   @override
   void setSubtitleTrack(int subtitleSelectedId) async {
-    int currentSubtitle = await flickManager
-        .flickVideoManager.videoPlayerController
-        .getSpuTrack();
-    if (subtitleSelectedId == currentSubtitle) subtitleSelectedId = -1;
-    flickManager.flickVideoManager.videoPlayerController
-        .setSpuTrack(subtitleSelectedId);
+    menuController.setSubtitleTrack(subtitleSelectedId);
   }
 }

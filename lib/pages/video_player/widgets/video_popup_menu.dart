@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_video_player/pages/mixins/popup_alerts.dart';
 import 'package:flutter_app_video_player/pages/shared_widgets/popup_item.dart';
 import 'package:flutter_app_video_player/pages/shared_widgets/popup_items.dart';
-import 'package:flutter_app_video_player/shared_state/providers_exports.dart';
+import 'package:flutter_app_video_player/shared_state/videocontroller/menu_controller_pool.dart';
 import 'package:provider/provider.dart';
 
 class VideoPopUpMenuButton extends StatelessWidget
@@ -37,10 +37,10 @@ class VideoPopUpMenuButton extends StatelessWidget
   void selectedAction(int value, BuildContext context) async {
     switch (value) {
       case SUBTITLE_POP_UP_ITMES:
-        openSubtitle(context, context.read<VideoPlayerPool>());
+        openSubtitle(context, context.read<MenuControllerPool>());
         break;
       case AUDIO_POP_UP_ITMES:
-        openAudio(context, context.read<VideoPlayerPool>());
+        openAudio(context, context.read<MenuControllerPool>());
         break;
     }
   }
